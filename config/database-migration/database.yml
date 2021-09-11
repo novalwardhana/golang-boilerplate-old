@@ -1,0 +1,9 @@
+local:
+  dialect: postgres
+  database: db_master
+  user: noval
+  password: noval
+  host: localhost
+  port: 5432
+  pool: 5
+
