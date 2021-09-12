@@ -57,6 +57,24 @@ func (c *controller) Update(user model.User, id int) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
+
+		timeNow := time.Now().Format("2006-01-02 15:04:05")
+		user.UpdatedAt = timeNow
+
+		encryptPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), model.PasswordHashCost)
+		if err != nil {
+			output <- model.Result{Error: err}
+			return
+		}
+		user.Password = string(encryptPassword)
+
+		updateResult := <-c.service.Update(user, id)
+		if updateResult.Error != nil {
+			output <- model.Result{Error: updateResult.Error}
+			return
+		}
+
+		output <- model.Result{Data: updateResult.Data}
 	}()
 	return output
 }

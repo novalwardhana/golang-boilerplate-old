@@ -1,7 +1,6 @@
 package router
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -69,9 +68,17 @@ func (r *Router) update(c echo.Context) error {
 		return c.JSON(http.StatusOK, response)
 	}
 
-	fmt.Println(id, user)
+	updateResult := <-r.controller.Update(user, id)
+	if updateResult.Error != nil {
+		response.StatusCode = http.StatusUnprocessableEntity
+		response.Message = updateResult.Error.Error()
+		return c.JSON(http.StatusOK, response)
+	}
 
-	return nil
+	response.Message = "Succes update data"
+	response.StatusCode = 200
+	response.Data = updateResult.Data
+	return c.JSON(http.StatusOK, response)
 }
 
 func (r *Router) delete(c echo.Context) error {
