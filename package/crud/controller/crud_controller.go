@@ -91,6 +91,14 @@ func (c *controller) Delete(id int) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
+
+		resultDelete := <-c.service.Delete(id)
+		if resultDelete.Error != nil {
+			output <- model.Result{Error: resultDelete.Error}
+			return
+		}
+
+		output <- model.Result{}
 	}()
 	return output
 }

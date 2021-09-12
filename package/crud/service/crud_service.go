@@ -68,6 +68,17 @@ func (s *service) Delete(id int) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
+
+		sql := ` delete from users where id = ? `
+		tx := s.dbMasterWrite.Begin()
+		if err := tx.Exec(sql, id).Error; err != nil {
+			tx.Callback()
+			output <- model.Result{Error: err}
+			return
+		}
+
+		tx.Commit()
+		output <- model.Result{}
 	}()
 	return output
 }
