@@ -83,6 +83,14 @@ func (c *controller) Info(id int) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
+
+		infoResult := <-c.service.Info(id)
+		if infoResult.Error != nil {
+			output <- model.Result{Error: infoResult.Error}
+			return
+		}
+
+		output <- model.Result{Data: infoResult.Data}
 	}()
 	return output
 }
@@ -92,9 +100,9 @@ func (c *controller) Delete(id int) <-chan model.Result {
 	go func() {
 		defer close(output)
 
-		resultDelete := <-c.service.Delete(id)
-		if resultDelete.Error != nil {
-			output <- model.Result{Error: resultDelete.Error}
+		deleteResult := <-c.service.Delete(id)
+		if deleteResult.Error != nil {
+			output <- model.Result{Error: deleteResult.Error}
 			return
 		}
 

@@ -23,7 +23,7 @@ func (r *Router) Mount(group *echo.Group) {
 	group.POST("/add", r.add)
 	group.PUT("/update/:id", r.update)
 	group.DELETE("/delete/:id", r.delete)
-	group.GET("/info", r.info)
+	group.GET("/info/:id", r.info)
 }
 
 func (r *Router) add(c echo.Context) error {
@@ -81,6 +81,30 @@ func (r *Router) update(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+func (r *Router) info(c echo.Context) error {
+	var id int
+	var err error
+	var response model.Response
+
+	if id, err = strconv.Atoi(c.Param("id")); err != nil {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "ID not valid"
+		return c.JSON(http.StatusOK, response)
+	}
+
+	infoResult := <-r.controller.Info(id)
+	if infoResult.Error != nil {
+		response.StatusCode = http.StatusUnprocessableEntity
+		response.Message = infoResult.Error.Error()
+		return c.JSON(http.StatusOK, response)
+	}
+
+	response.StatusCode = 200
+	response.Message = "Success get data"
+	response.Data = infoResult.Data
+	return c.JSON(http.StatusOK, response)
+}
+
 func (r *Router) delete(c echo.Context) error {
 	var id int
 	var err error
@@ -102,8 +126,4 @@ func (r *Router) delete(c echo.Context) error {
 	response.StatusCode = 200
 	response.Message = "Success delete data"
 	return c.JSON(http.StatusOK, response)
-}
-
-func (r *Router) info(c echo.Context) error {
-	return nil
 }

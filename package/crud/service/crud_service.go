@@ -13,6 +13,7 @@ type service struct {
 type Service interface {
 	Add(user model.User) <-chan model.Result
 	Update(user model.User, id int) <-chan model.Result
+	Info(id int) <-chan model.Result
 	Delete(id int) <-chan model.Result
 }
 
@@ -58,6 +59,24 @@ func (s *service) Update(user model.User, id int) <-chan model.Result {
 		}
 
 		tx.Commit()
+		user.Password = ""
+		output <- model.Result{Data: user}
+	}()
+	return output
+}
+
+func (s *service) Info(id int) <-chan model.Result {
+	output := make(chan model.Result)
+	go func() {
+		defer close(output)
+
+		var user model.User
+		sql := ` select name, username, email, password, is_active, created_at, updated_at from users where id = ? `
+		if err := s.dbMasterRead.Raw(sql, id).First(&user).Error; err != nil {
+			output <- model.Result{Error: err}
+			return
+		}
+
 		user.Password = ""
 		output <- model.Result{Data: user}
 	}()
