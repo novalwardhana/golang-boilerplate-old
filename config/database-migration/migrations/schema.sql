@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.12 (Ubuntu 11.12-1.pgdg20.04+1)
--- Dumped by pg_dump version 11.12 (Ubuntu 11.12-1.pgdg20.04+1)
+-- Dumped from database version 11.10 (Ubuntu 11.10-1.pgdg20.04+1)
+-- Dumped by pg_dump version 11.10 (Ubuntu 11.10-1.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -113,4 +113,3 @@ CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USIN
 --
 -- PostgreSQL database dump complete
 --
-

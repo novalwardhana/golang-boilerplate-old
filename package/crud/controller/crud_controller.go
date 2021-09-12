@@ -1,8 +1,11 @@
 package controller
 
 import (
+	"time"
+
 	"github.com/novalwardhana/golang-boiler-plate/package/crud/model"
 	"github.com/novalwardhana/golang-boiler-plate/package/crud/service"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type controller struct {
@@ -27,7 +30,19 @@ func (c *controller) Add(user model.User) <-chan model.Result {
 	go func() {
 		defer close(output)
 
-		addResult := <-c.Add(user)
+		user.IsActive = true
+		timeNow := time.Now().Format("2006-01-02 15:04:05")
+		user.CreatedAt = timeNow
+		user.UpdatedAt = timeNow
+
+		encryptPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), model.PasswordHashCost)
+		if err != nil {
+			output <- model.Result{Error: err}
+			return
+		}
+		user.Password = string(encryptPassword)
+
+		addResult := <-c.service.Add(user)
 		if addResult.Error != nil {
 			output <- model.Result{Error: addResult.Error}
 			return
