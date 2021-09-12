@@ -27,6 +27,17 @@ func (s *service) Add(user model.User) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
+
+		tx := s.dbMasterWrite.Begin()
+		if err := tx.Create(user).Error; err != nil {
+			tx.Rollback()
+			output <- model.Result{Error: err}
+			return
+		}
+
+		tx.Commit()
+		output <- model.Result{Data: user}
+
 	}()
 	return output
 
