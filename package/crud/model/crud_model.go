@@ -2,6 +2,11 @@ package model
 
 const PasswordHashCost int = 10
 
+type Params struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+}
+
 type User struct {
 	Name      string `json:"name"`
 	Username  string `json:"username"`

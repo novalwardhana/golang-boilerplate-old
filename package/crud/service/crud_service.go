@@ -50,9 +50,9 @@ func (s *service) Update(user model.User, id int) <-chan model.Result {
 	go func() {
 		defer close(output)
 
-		sql := ` update users set name = ?, password = ?, is_active = ?, updated_at = ? where id = ? `
+		sql := ` update users set name = ?, username = ?, password = ?, is_active = ?, updated_at = ? where id = ? `
 		tx := s.dbMasterWrite.Begin()
-		if err := tx.Exec(sql, user.Name, user.Password, user.IsActive, user.UpdatedAt, id).Error; err != nil {
+		if err := tx.Exec(sql, user.Name, user.Username, user.Password, user.IsActive, user.UpdatedAt, id).Error; err != nil {
 			tx.Callback()
 			output <- model.Result{Error: err}
 			return
