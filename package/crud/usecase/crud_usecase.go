@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"fmt"
+	"math"
 	"time"
 
 	"github.com/novalwardhana/golang-boiler-plate/package/crud/model"
@@ -45,10 +45,16 @@ func (u *usecase) List(params model.Params) <-chan model.Result {
 			return
 		}
 		data := getDataResult.Data.([]model.User)
-		fmt.Println("count: ", countData)
-		fmt.Println("data: ", data)
 
-		output <- model.Result{}
+		var userList model.UserList
+		userList.Total = int(countData)
+		userList.PerPage = params.Limit
+		userList.Page = params.Page
+		userList.Data = data
+		lastPage := math.Ceil(float64(countData) / float64(params.Limit))
+		userList.LastPage = int(lastPage)
+
+		output <- model.Result{Data: userList}
 	}()
 	return output
 }

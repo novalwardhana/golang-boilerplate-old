@@ -18,6 +18,14 @@ type User struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
+type UserList struct {
+	Total    int         `json:"total"`
+	PerPage  int         `json:"per_page"`
+	Page     int         `json:"page"`
+	LastPage int         `json:"last_page"`
+	Data     interface{} `json:"data"`
+}
+
 type Result struct {
 	Data  interface{}
 	Error error

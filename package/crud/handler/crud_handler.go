@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -50,9 +49,17 @@ func (h *Handler) list(c echo.Context) error {
 	}
 
 	listResult := <-h.usecase.List(params)
-	fmt.Println("listResult: ", listResult)
+	if listResult.Error != nil {
+		response.StatusCode = http.StatusNotFound
+		response.Message = err.Error()
+		return c.JSON(http.StatusOK, response)
+	}
 
-	return nil
+	response.StatusCode = http.StatusOK
+	response.Message = "Success get data"
+	response.Data = listResult.Data
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *Handler) add(c echo.Context) error {
