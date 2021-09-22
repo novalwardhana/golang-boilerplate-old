@@ -1,33 +1,34 @@
-package router
+package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo"
-	"github.com/novalwardhana/golang-boiler-plate/package/crud/controller"
 	"github.com/novalwardhana/golang-boiler-plate/package/crud/model"
+	"github.com/novalwardhana/golang-boiler-plate/package/crud/usecase"
 )
 
-type Router struct {
-	controller controller.Controller
+type Handler struct {
+	usecase usecase.Usecase
 }
 
-func NewRouter(controller controller.Controller) *Router {
-	return &Router{
-		controller: controller,
+func NewHandler(usecase usecase.Usecase) *Handler {
+	return &Handler{
+		usecase: usecase,
 	}
 }
 
-func (r *Router) Mount(group *echo.Group) {
-	group.GET("/list", r.list)
-	group.POST("/add", r.add)
-	group.PUT("/update/:id", r.update)
-	group.DELETE("/delete/:id", r.delete)
-	group.GET("/info/:id", r.info)
+func (h *Handler) Mount(group *echo.Group) {
+	group.GET("/list", h.list)
+	group.POST("/add", h.add)
+	group.PUT("/update/:id", h.update)
+	group.DELETE("/delete/:id", h.delete)
+	group.GET("/info/:id", h.info)
 }
 
-func (r *Router) list(c echo.Context) error {
+func (h *Handler) list(c echo.Context) error {
 	var params model.Params
 	var err error
 	var response model.Response
@@ -48,10 +49,13 @@ func (r *Router) list(c echo.Context) error {
 		return c.JSON(http.StatusOK, response)
 	}
 
+	listResult := <-h.usecase.List(params)
+	fmt.Println("listResult: ", listResult)
+
 	return nil
 }
 
-func (r *Router) add(c echo.Context) error {
+func (h *Handler) add(c echo.Context) error {
 	var newUser model.User
 	var err error
 	var response model.Response
@@ -64,7 +68,7 @@ func (r *Router) add(c echo.Context) error {
 	}
 
 	/* Add data process */
-	addResult := <-r.controller.Add(newUser)
+	addResult := <-h.usecase.Add(newUser)
 	if addResult.Error != nil {
 		response.StatusCode = http.StatusUnprocessableEntity
 		response.Message = addResult.Error.Error()
@@ -77,7 +81,7 @@ func (r *Router) add(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (r *Router) update(c echo.Context) error {
+func (h *Handler) update(c echo.Context) error {
 	var id int
 	var user model.User
 	var err error
@@ -105,7 +109,7 @@ func (r *Router) update(c echo.Context) error {
 	}
 
 	/* Update data process */
-	updateResult := <-r.controller.Update(user, id)
+	updateResult := <-h.usecase.Update(user, id)
 	if updateResult.Error != nil {
 		response.StatusCode = http.StatusUnprocessableEntity
 		response.Message = updateResult.Error.Error()
@@ -118,7 +122,7 @@ func (r *Router) update(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (r *Router) info(c echo.Context) error {
+func (h *Handler) info(c echo.Context) error {
 	var id int
 	var err error
 	var response model.Response
@@ -131,7 +135,7 @@ func (r *Router) info(c echo.Context) error {
 	}
 
 	/* Get data process */
-	infoResult := <-r.controller.Info(id)
+	infoResult := <-h.usecase.Info(id)
 	if infoResult.Error != nil {
 		response.StatusCode = http.StatusUnprocessableEntity
 		response.Message = infoResult.Error.Error()
@@ -144,7 +148,7 @@ func (r *Router) info(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (r *Router) delete(c echo.Context) error {
+func (h *Handler) delete(c echo.Context) error {
 	var id int
 	var err error
 	var response model.Response
@@ -157,7 +161,7 @@ func (r *Router) delete(c echo.Context) error {
 	}
 
 	/* Delete data process */
-	deleteResult := <-r.controller.Delete(id)
+	deleteResult := <-h.usecase.Delete(id)
 	if deleteResult.Error != nil {
 		response.StatusCode = http.StatusUnprocessableEntity
 		response.Message = deleteResult.Error.Error()

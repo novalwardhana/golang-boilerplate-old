@@ -1,31 +1,59 @@
-package controller
+package usecase
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/novalwardhana/golang-boiler-plate/package/crud/model"
-	"github.com/novalwardhana/golang-boiler-plate/package/crud/service"
+	"github.com/novalwardhana/golang-boiler-plate/package/crud/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type controller struct {
-	service service.Service
+type usecase struct {
+	repository repository.Repository
 }
 
-type Controller interface {
+type Usecase interface {
+	List(params model.Params) <-chan model.Result
 	Add(user model.User) <-chan model.Result
 	Update(user model.User, id int) <-chan model.Result
 	Info(id int) <-chan model.Result
 	Delete(id int) <-chan model.Result
 }
 
-func NewController(service service.Service) Controller {
-	return &controller{
-		service: service,
+func NewUsecase(repository repository.Repository) Usecase {
+	return &usecase{
+		repository: repository,
 	}
 }
 
-func (c *controller) Add(user model.User) <-chan model.Result {
+func (u *usecase) List(params model.Params) <-chan model.Result {
+	output := make(chan model.Result)
+	go func() {
+		defer close(output)
+
+		countDataResult := <-u.repository.CountData()
+		if countDataResult.Error != nil {
+			output <- model.Result{Error: countDataResult.Error}
+			return
+		}
+		countData := countDataResult.Data.(int64)
+
+		getDataResult := <-u.repository.GetData(params)
+		if getDataResult.Error != nil {
+			output <- model.Result{Error: getDataResult.Error}
+			return
+		}
+		data := getDataResult.Data.([]model.User)
+		fmt.Println("count: ", countData)
+		fmt.Println("data: ", data)
+
+		output <- model.Result{}
+	}()
+	return output
+}
+
+func (u *usecase) Add(user model.User) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
@@ -42,7 +70,7 @@ func (c *controller) Add(user model.User) <-chan model.Result {
 		}
 		user.Password = string(encryptPassword)
 
-		addResult := <-c.service.Add(user)
+		addResult := <-u.repository.Add(user)
 		if addResult.Error != nil {
 			output <- model.Result{Error: addResult.Error}
 			return
@@ -53,7 +81,7 @@ func (c *controller) Add(user model.User) <-chan model.Result {
 	return output
 }
 
-func (c *controller) Update(user model.User, id int) <-chan model.Result {
+func (u *usecase) Update(user model.User, id int) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
@@ -68,7 +96,7 @@ func (c *controller) Update(user model.User, id int) <-chan model.Result {
 		}
 		user.Password = string(encryptPassword)
 
-		updateResult := <-c.service.Update(user, id)
+		updateResult := <-u.repository.Update(user, id)
 		if updateResult.Error != nil {
 			output <- model.Result{Error: updateResult.Error}
 			return
@@ -79,12 +107,12 @@ func (c *controller) Update(user model.User, id int) <-chan model.Result {
 	return output
 }
 
-func (c *controller) Info(id int) <-chan model.Result {
+func (u *usecase) Info(id int) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
 
-		infoResult := <-c.service.Info(id)
+		infoResult := <-u.repository.Info(id)
 		if infoResult.Error != nil {
 			output <- model.Result{Error: infoResult.Error}
 			return
@@ -95,12 +123,12 @@ func (c *controller) Info(id int) <-chan model.Result {
 	return output
 }
 
-func (c *controller) Delete(id int) <-chan model.Result {
+func (u *usecase) Delete(id int) <-chan model.Result {
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
 
-		deleteResult := <-c.service.Delete(id)
+		deleteResult := <-u.repository.Delete(id)
 		if deleteResult.Error != nil {
 			output <- model.Result{Error: deleteResult.Error}
 			return

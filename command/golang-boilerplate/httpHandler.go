@@ -6,9 +6,9 @@ import (
 
 	globalENV "github.com/novalwardhana/golang-boiler-plate/global/env"
 
-	crudConteroller "github.com/novalwardhana/golang-boiler-plate/package/crud/controller"
-	crudRouter "github.com/novalwardhana/golang-boiler-plate/package/crud/router"
-	crudService "github.com/novalwardhana/golang-boiler-plate/package/crud/service"
+	crudhandler "github.com/novalwardhana/golang-boiler-plate/package/crud/handler"
+	crudRepository "github.com/novalwardhana/golang-boiler-plate/package/crud/repository"
+	crudUsecase "github.com/novalwardhana/golang-boiler-plate/package/crud/usecase"
 
 	"github.com/labstack/echo"
 	"gorm.io/gorm"
@@ -18,11 +18,11 @@ func StartHTTPHandler(dbMasterRead *gorm.DB, dbMasterWrite *gorm.DB) {
 	r := echo.New()
 
 	/* crud basic function */
-	crudService := crudService.NewService(dbMasterRead, dbMasterWrite)
-	crudConteroller := crudConteroller.NewController(crudService)
-	crudRouter := crudRouter.NewRouter(crudConteroller)
+	crudRepository := crudRepository.NewRepository(dbMasterRead, dbMasterWrite)
+	crudUsecase := crudUsecase.NewUsecase(crudRepository)
+	crudhandler := crudhandler.NewHandler(crudUsecase)
 	crudGroup := r.Group("/api/v1/crud")
-	crudRouter.Mount(crudGroup)
+	crudhandler.Mount(crudGroup)
 
 	r.Start(fmt.Sprintf(":%s", os.Getenv(globalENV.PORT)))
 }
