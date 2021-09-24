@@ -4,7 +4,7 @@ import (
 	"os"
 
 	config "github.com/joho/godotenv"
-	dbConn "github.com/novalwardhana/golang-boiler-plate/config/database-connection"
+	dbConn "github.com/novalwardhana/golang-boilerplate/config/database-connection"
 	"gorm.io/gorm"
 )
 

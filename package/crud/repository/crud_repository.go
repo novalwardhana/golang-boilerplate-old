@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/novalwardhana/golang-boiler-plate/package/crud/model"
+	"github.com/novalwardhana/golang-boilerplate/package/crud/model"
 	"gorm.io/gorm"
 )
 
@@ -55,30 +55,14 @@ func (r *repository) GetData(params model.Params) <-chan model.Result {
 		db = db.Limit(params.Limit)
 		db = db.Offset(offset)
 
-		sql := ` select id, name, username, email, password, is_active, created_at, updated_at from users `
-		rows, err := db.Raw(sql).Rows()
-		if err != nil {
+		var datas []model.User
+		if err := db.Find(&datas).Error; err != nil {
 			output <- model.Result{Error: err}
 			return
 		}
-		var datas []model.User
-		var data model.User
-		for rows.Next() {
-			if err := rows.Scan(
-				&data.ID,
-				&data.Name,
-				&data.Username,
-				&data.Email,
-				&data.Password,
-				&data.IsActive,
-				&data.CreatedAt,
-				&data.UpdatedAt,
-			); err != nil {
-				output <- model.Result{Error: err}
-				return
-			}
-			data.Password = ""
-			datas = append(datas, data)
+
+		for i := range datas {
+			datas[i].Password = ""
 		}
 
 		output <- model.Result{Data: datas}

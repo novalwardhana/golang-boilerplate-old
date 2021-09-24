@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo"
-	"github.com/novalwardhana/golang-boiler-plate/package/crud/model"
-	"github.com/novalwardhana/golang-boiler-plate/package/crud/usecase"
+	"github.com/novalwardhana/golang-boilerplate/package/crud/model"
+	"github.com/novalwardhana/golang-boilerplate/package/crud/usecase"
 )
 
 type Handler struct {

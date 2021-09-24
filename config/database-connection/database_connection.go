@@ -2,12 +2,15 @@ package databaseConnection
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
+	"time"
 
-	globalENV "github.com/novalwardhana/golang-boiler-plate/global/env"
+	globalENV "github.com/novalwardhana/golang-boilerplate/global/env"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func DBMaster() *gorm.DB {
@@ -17,7 +20,20 @@ func DBMaster() *gorm.DB {
 }
 
 func CreateConnection(uri string) *gorm.DB {
-	db, err := gorm.Open(postgres.Open(uri), &gorm.Config{})
+
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			IgnoreRecordNotFoundError: true,
+			Colorful:                  false,
+		},
+	)
+
+	db, err := gorm.Open(postgres.Open(uri), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		fmt.Println("Please check database connection", err)
 	}

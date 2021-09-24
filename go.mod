@@ -1,4 +1,4 @@
-module github.com/novalwardhana/golang-boiler-plate
+module github.com/novalwardhana/golang-boilerplate
 
 go 1.13
 

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	globalENV "github.com/novalwardhana/golang-boiler-plate/global/env"
+	globalENV "github.com/novalwardhana/golang-boilerplate/global/env"
 
-	crudhandler "github.com/novalwardhana/golang-boiler-plate/package/crud/handler"
-	crudRepository "github.com/novalwardhana/golang-boiler-plate/package/crud/repository"
-	crudUsecase "github.com/novalwardhana/golang-boiler-plate/package/crud/usecase"
+	crudhandler "github.com/novalwardhana/golang-boilerplate/package/crud/handler"
+	crudRepository "github.com/novalwardhana/golang-boilerplate/package/crud/repository"
+	crudUsecase "github.com/novalwardhana/golang-boilerplate/package/crud/usecase"
 
 	"github.com/labstack/echo"
 	"gorm.io/gorm"
