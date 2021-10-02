@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	globalENV "github.com/novalwardhana/golang-boilerplate/global/env"
 	"github.com/novalwardhana/golang-boilerplate/package/upload-file/model"
 	"github.com/novalwardhana/golang-boilerplate/package/upload-file/repository"
 )
@@ -15,7 +16,7 @@ type usecase struct {
 	repository repository.Repository
 }
 
-const fileLocation string = "/home/aino/golang-boilerplate/upload-file"
+const DefaultFileLocation string = "/home/novalwardhana/golang-boilerplate/upload-file"
 
 type Usecase interface {
 	UploadFile(file *multipart.FileHeader, fileExt string) <-chan model.Result
@@ -31,6 +32,12 @@ func (u *usecase) UploadFile(file *multipart.FileHeader, fileExt string) <-chan 
 	output := make(chan model.Result)
 	go func() {
 		defer close(output)
+
+		/* Choose file location */
+		fileLocation := os.Getenv(globalENV.GeneralFileDir)
+		if len(fileLocation) <= 0 {
+			fileLocation = DefaultFileLocation
+		}
 
 		/* Create file directory */
 		fileDir := fileLocation + "/" + fileExt + "/"
