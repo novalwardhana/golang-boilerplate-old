@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.10 (Ubuntu 11.10-1.pgdg20.04+1)
--- Dumped by pg_dump version 11.10 (Ubuntu 11.10-1.pgdg20.04+1)
+-- Dumped from database version 11.12 (Ubuntu 11.12-1.pgdg20.04+1)
+-- Dumped by pg_dump version 11.12 (Ubuntu 11.12-1.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,6 +19,44 @@ SET row_security = off;
 SET default_tablespace = '';
 
 SET default_with_oids = false;
+
+--
+-- Name: files; Type: TABLE; Schema: public; Owner: noval
+--
+
+CREATE TABLE public.files (
+    id integer NOT NULL,
+    directory character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    size character varying(255) NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.files OWNER TO noval;
+
+--
+-- Name: files_id_seq; Type: SEQUENCE; Schema: public; Owner: noval
+--
+
+CREATE SEQUENCE public.files_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.files_id_seq OWNER TO noval;
+
+--
+-- Name: files_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: noval
+--
+
+ALTER SEQUENCE public.files_id_seq OWNED BY public.files.id;
+
 
 --
 -- Name: schema_migration; Type: TABLE; Schema: public; Owner: noval
@@ -73,10 +111,25 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: files id; Type: DEFAULT; Schema: public; Owner: noval
+--
+
+ALTER TABLE ONLY public.files ALTER COLUMN id SET DEFAULT nextval('public.files_id_seq'::regclass);
+
+
+--
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: noval
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: files files_pkey; Type: CONSTRAINT; Schema: public; Owner: noval
+--
+
+ALTER TABLE ONLY public.files
+    ADD CONSTRAINT files_pkey PRIMARY KEY (id);
 
 
 --
@@ -113,3 +166,4 @@ CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USIN
 --
 -- PostgreSQL database dump complete
 --
+

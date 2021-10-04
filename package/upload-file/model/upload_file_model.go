@@ -10,3 +10,11 @@ type Response struct {
 	Message    string      `json:"message"`
 	Data       interface{} `json:"data"`
 }
+
+type File struct {
+	Directory string `json:"directory"`
+	Name      string `json:"name"`
+	Size      string `json:"size"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}

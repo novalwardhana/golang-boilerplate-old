@@ -4,6 +4,7 @@ import (
 	"io"
 	"mime/multipart"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -69,6 +70,21 @@ func (u *usecase) UploadFile(file *multipart.FileHeader, fileExt string) <-chan 
 		/* Save file to directory */
 		if _, err := io.Copy(fileTarget, fileSrc); err != nil {
 			output <- model.Result{Error: err}
+			return
+		}
+
+		/* Save file information to database */
+		filesize := strconv.Itoa(int(file.Size))
+		fileInfo := model.File{
+			Directory: fileDir,
+			Name:      filename,
+			Size:      filesize,
+			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			UpdatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		}
+		saveFileInfoResult := <-u.repository.SaveFileInfo(fileInfo)
+		if saveFileInfoResult.Error != nil {
+			output <- model.Result{Error: saveFileInfoResult.Error}
 			return
 		}
 

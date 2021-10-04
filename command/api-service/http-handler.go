@@ -29,7 +29,7 @@ func StartHTTPHandler(dbMasterRead *gorm.DB, dbMasterWrite *gorm.DB) {
 	crudhandler.Mount(crudGroup)
 
 	/* Upload file function */
-	uploadFileRepository := uploadFileRepository.NewRepository()
+	uploadFileRepository := uploadFileRepository.NewRepository(dbMasterRead, dbMasterWrite)
 	uploadFileUsecase := uploadFileUsecase.NewUsecase(uploadFileRepository)
 	uploadFileHandler := uploadFileHandler.NewHandler(uploadFileUsecase)
 	uploadFileGroup := r.Group("/api/v1/upload-file")
