@@ -124,6 +124,7 @@ func (u *usecase) UploadCSVToDatabase(file *multipart.FileHeader) <-chan model.R
 			output <- model.Result{Error: err}
 			return
 		}
+		defer fileSrc.Close()
 
 		/* Compose file target */
 		filename := "uploadCSV_" + time.Now().Format("060102150405") + "_" + strings.ReplaceAll(file.Filename, " ", "_")
@@ -170,14 +171,19 @@ func (u *usecase) UploadCSVToDatabase(file *multipart.FileHeader) <-chan model.R
 			users = append(users, user)
 		}
 		if len(users) < 2 {
+			os.Remove(fileDir + filename)
 			output <- model.Result{Error: errors.New("data in csv not found")}
 			return
 		}
 		CSVToDatabaseResult := <-u.repository.CSVToDatabase(users[1:])
 		if CSVToDatabaseResult.Error != nil {
+			os.Remove(fileDir + filename)
 			output <- model.Result{Error: CSVToDatabaseResult.Error}
 			return
 		}
+
+		/* Delete file after all function finished */
+		os.Remove(fileDir + filename)
 
 		output <- model.Result{}
 	}()
