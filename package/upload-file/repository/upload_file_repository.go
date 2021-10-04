@@ -12,6 +12,7 @@ type repository struct {
 
 type Repository interface {
 	SaveFileInfo(file model.File) <-chan model.Result
+	CSVToDatabase(users []model.User) <-chan model.Result
 }
 
 func NewRepository(dbMasterRead, dbMasterWrite *gorm.DB) Repository {
@@ -28,6 +29,23 @@ func (r *repository) SaveFileInfo(file model.File) <-chan model.Result {
 
 		tx := r.dbMasterWrite.Begin()
 		if err := tx.Create(file).Error; err != nil {
+			output <- model.Result{Error: err}
+			return
+		}
+		tx.Commit()
+		output <- model.Result{}
+
+	}()
+	return output
+}
+
+func (r *repository) CSVToDatabase(users []model.User) <-chan model.Result {
+	output := make(chan model.Result)
+	go func() {
+		defer close(output)
+
+		tx := r.dbMasterWrite.Begin()
+		if err := tx.Create(users).Error; err != nil {
 			output <- model.Result{Error: err}
 			return
 		}
