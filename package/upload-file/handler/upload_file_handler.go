@@ -23,11 +23,13 @@ func NewHandler(usecase usecase.Usecase) *Handler {
 const ExtCSV string = "csv"
 const EXTPDF string = "pdf"
 const ExtExcel string = "xlsx"
+const ExtZIP string = "zip"
 
 func (h *Handler) Mount(g *echo.Group) {
 	g.POST("/csv", h.uploadCSV)
 	g.POST("/pdf", h.uploadPDF)
 	g.POST("/excel", h.uploadExcel)
+	g.POST("/zip", h.uploadZIP)
 	g.POST("/csv-to-database", h.uploadCSVToDatabase)
 }
 
@@ -183,5 +185,43 @@ func (h *Handler) uploadCSVToDatabase(c echo.Context) error {
 
 	response.StatusCode = http.StatusOK
 	response.Message = "Successfully export to database"
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *Handler) uploadZIP(c echo.Context) error {
+	var file *multipart.FileHeader
+	var err error
+	var response model.Response
+
+	/* Get file form */
+	if file, err = c.FormFile("file"); err != nil {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "Invalid form file parameter"
+		return c.JSON(http.StatusOK, response)
+	}
+
+	/* File validation */
+	filenameArr := strings.Split(file.Filename, ".")
+	if len(filenameArr) < 2 {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "File not valid"
+		return c.JSON(http.StatusOK, response)
+	}
+	if filenameArr[1] != ExtZIP {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "File must CSV format"
+		return c.JSON(http.StatusOK, response)
+	}
+
+	/* Process upload file */
+	uploadResult := <-h.usecase.UploadFileZIP(file)
+	if uploadResult.Error != nil {
+		response.StatusCode = http.StatusBadGateway
+		response.Message = uploadResult.Error.Error()
+		return c.JSON(http.StatusOK, response)
+	}
+
+	response.StatusCode = http.StatusOK
+	response.Message = "File zip successfully uploaded"
 	return c.JSON(http.StatusOK, response)
 }
