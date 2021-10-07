@@ -21,6 +21,7 @@ func NewHandler(usecase usecase.Usecase) *Handler {
 func (h *Handler) Mount(g *echo.Group) {
 	g.GET("/:filename", h.downloadFile)
 	g.GET("/zip/:filename", h.downloadFileZip)
+	g.GET("/multiple", h.downloadMultipleFile)
 }
 
 func (h *Handler) downloadFile(c echo.Context) error {
@@ -55,5 +56,33 @@ func (h *Handler) downloadFileZip(c echo.Context) error {
 
 	/* Download file */
 	zip := fileInfo.Data.(model.Zip)
+	return c.Attachment(zip.Directory+zip.Name, zip.Name)
+}
+
+func (h *Handler) downloadMultipleFile(c echo.Context) error {
+	var payload model.MultipleFilePayload
+	var response model.Response
+
+	/* Payload validation */
+	if err := c.Bind(&payload); err != nil {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = err.Error()
+		return c.JSON(http.StatusOK, response)
+	}
+	if len(payload.Filenames) == 0 {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "Filenames must be filled in payload"
+		return c.JSON(http.StatusOK, response)
+	}
+
+	/* Download process */
+	downloadProcess := <-h.usecase.DownloadMultipleFile(payload.Filenames)
+	if downloadProcess.Error != nil {
+		response.StatusCode = http.StatusBadGateway
+		response.Message = downloadProcess.Error.Error()
+		return c.JSON(http.StatusOK, response)
+	}
+
+	zip := downloadProcess.Data.(model.Zip)
 	return c.Attachment(zip.Directory+zip.Name, zip.Name)
 }

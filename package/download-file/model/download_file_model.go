@@ -23,3 +23,7 @@ type Zip struct {
 	Directory string `json:"directory"`
 	Name      string `json:"name"`
 }
+
+type MultipleFilePayload struct {
+	Filenames []string
+}

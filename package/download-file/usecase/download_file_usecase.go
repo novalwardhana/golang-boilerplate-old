@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"archive/zip"
+	"errors"
 	"io"
 	"os"
 	"time"
@@ -18,6 +19,7 @@ type usecase struct {
 type Usecase interface {
 	DownloadFile(filename string) <-chan model.Result
 	DownloadFileZip(filename string) <-chan model.Result
+	DownloadMultipleFile(filenames []string) <-chan model.Result
 }
 
 func NewUsecase(repository repository.Repository) Usecase {
@@ -141,6 +143,104 @@ func (u *usecase) DownloadFileZip(filename string) <-chan model.Result {
 		}
 
 		output <- model.Result{Data: zip}
+	}()
+	return output
+}
+
+func (u *usecase) DownloadMultipleFile(filenames []string) <-chan model.Result {
+	output := make(chan model.Result)
+	go func() {
+		defer close(output)
+		var totalError int
+
+		/* Create download zip directory */
+		fileLocation := os.Getenv(globalENV.GeneralFileDir)
+		if len(fileLocation) <= 0 {
+			fileLocation = DefaultFileLocation
+		}
+		fileDirZip := fileLocation + "/dowload-zip/"
+		if _, err := os.Stat(fileDirZip); os.IsNotExist(err) {
+			err := os.MkdirAll(fileDirZip, os.ModePerm)
+			if err != nil {
+				output <- model.Result{Error: err}
+				return
+			}
+		}
+
+		/* Create zip file */
+		filenameZip := "ZIP_" + time.Now().Format("20060102150405") + "_" + "download_file.zip"
+		fileZip, err := os.OpenFile(fileDirZip+filenameZip, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			output <- model.Result{Error: err}
+			return
+		}
+		defer fileZip.Close()
+		fileZipWrite := zip.NewWriter(fileZip)
+		defer fileZipWrite.Close()
+
+		/* files iteration */
+		for _, filename := range filenames {
+
+			/* Get file info */
+			fileInfo := <-u.repository.GetFileInfo(filename)
+			if fileInfo.Error != nil {
+				totalError++
+				continue
+			}
+			file := fileInfo.Data.(model.File)
+
+			/* Check file is exist or not */
+			if _, err := os.Stat(file.Directory + file.Name); os.IsNotExist(err) {
+				totalError++
+				continue
+			}
+
+			/* Open file src */
+			fileSrc, err := os.Open(file.Directory + file.Name)
+			if err != nil {
+				totalError++
+				continue
+			}
+
+			/* Get file src information */
+			fileSrcInfo, err := fileSrc.Stat()
+			if err != nil {
+				totalError++
+				continue
+			}
+
+			/* Set file zip header */
+			fileZipHeader, err := zip.FileInfoHeader(fileSrcInfo)
+			if err != nil {
+				totalError++
+				continue
+			}
+
+			/* Append file to zip */
+			writer, err := fileZipWrite.CreateHeader(fileZipHeader)
+			if err != nil {
+				totalError++
+				continue
+			}
+			if _, err := io.Copy(writer, fileSrc); err != nil {
+				totalError++
+				continue
+			}
+
+			fileSrc.Close()
+		}
+
+		if totalError == len(filenames) {
+			output <- model.Result{Error: errors.New("all file cannot zipped")}
+			return
+		}
+
+		zip := model.Zip{
+			Directory: fileDirZip,
+			Name:      filenameZip,
+		}
+		output <- model.Result{Data: zip}
+
 	}()
 	return output
 }
