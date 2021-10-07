@@ -14,6 +14,10 @@ import (
 	uploadFileRepository "github.com/novalwardhana/golang-boilerplate/package/upload-file/repository"
 	uploadFileUsecase "github.com/novalwardhana/golang-boilerplate/package/upload-file/usecase"
 
+	downloadFileHandler "github.com/novalwardhana/golang-boilerplate/package/download-file/handler"
+	downloadFileRepository "github.com/novalwardhana/golang-boilerplate/package/download-file/repository"
+	downloadFileUsecase "github.com/novalwardhana/golang-boilerplate/package/download-file/usecase"
+
 	"github.com/labstack/echo"
 	"gorm.io/gorm"
 )
@@ -34,6 +38,13 @@ func StartHTTPHandler(dbMasterRead *gorm.DB, dbMasterWrite *gorm.DB) {
 	uploadFileHandler := uploadFileHandler.NewHandler(uploadFileUsecase)
 	uploadFileGroup := r.Group("/api/v1/upload-file")
 	uploadFileHandler.Mount(uploadFileGroup)
+
+	/* Download file function */
+	downloadFileRepository := downloadFileRepository.NewRepository(dbMasterRead, dbMasterWrite)
+	downloadFileUsecase := downloadFileUsecase.NewUsecase(downloadFileRepository)
+	downloadFileHandler := downloadFileHandler.NewHandler(downloadFileUsecase)
+	downloadFileGroup := r.Group("/api/v1/download-file")
+	downloadFileHandler.Mount(downloadFileGroup)
 
 	r.Start(fmt.Sprintf(":%s", os.Getenv(globalENV.PORT)))
 }
