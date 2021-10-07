@@ -18,3 +18,8 @@ type File struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
+
+type Zip struct {
+	Directory string `json:"directory"`
+	Name      string `json:"name"`
+}
