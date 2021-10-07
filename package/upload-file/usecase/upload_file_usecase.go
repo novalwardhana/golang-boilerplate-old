@@ -27,6 +27,7 @@ type Usecase interface {
 	UploadFile(file *multipart.FileHeader, fileExt string) <-chan model.Result
 	UploadCSVToDatabase(file *multipart.FileHeader) <-chan model.Result
 	UploadFileZIP(file *multipart.FileHeader) <-chan model.Result
+	UploadMultipleFile(files []model.UploadFile) <-chan model.Result
 }
 
 func NewUsecase(repository repository.Repository) Usecase {
@@ -279,6 +280,73 @@ func (u *usecase) UploadFileZIP(file *multipart.FileHeader) <-chan model.Result 
 			saveFileInfoResult := <-u.repository.SaveFileInfo(fileInfo)
 			if saveFileInfoResult.Error != nil {
 				continue
+			}
+		}
+
+		output <- model.Result{}
+	}()
+	return output
+}
+
+func (u *usecase) UploadMultipleFile(files []model.UploadFile) <-chan model.Result {
+	output := make(chan model.Result)
+	go func() {
+		defer close(output)
+
+		/* Choose file location */
+		fileLocation := os.Getenv(globalENV.GeneralFileDir)
+		if len(fileLocation) <= 0 {
+			fileLocation = DefaultFileLocation
+		}
+
+		for _, file := range files {
+			/* Create file directory */
+			fileDir := fileLocation + "/" + file.FileExt + "/"
+			if _, err := os.Stat(fileDir); os.IsNotExist(err) {
+				err := os.MkdirAll(fileDir, os.ModePerm)
+				if err != nil {
+					output <- model.Result{Error: err}
+					return
+				}
+			}
+
+			/* Compose file src */
+			fileSrc, err := file.File.Open()
+			if err != nil {
+				output <- model.Result{Error: err}
+				return
+			}
+
+			/* Compose file target */
+			filename := "upload" + strings.ToUpper(file.FileExt) + "_" + time.Now().Format("20060102150405") + "_" + strings.ReplaceAll(file.File.Filename, " ", "_")
+			fileTarget, err := os.OpenFile(fileDir+filename, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+			if err != nil {
+				output <- model.Result{Error: err}
+				return
+			}
+
+			/* save file to directory */
+			if _, err := io.Copy(fileTarget, fileSrc); err != nil {
+				output <- model.Result{Error: err}
+				return
+			}
+
+			fileTarget.Close()
+			fileSrc.Close()
+
+			/* Save file information to database */
+			filesize := strconv.Itoa(int(file.File.Size))
+			fileInfo := model.File{
+				Directory: fileDir,
+				Name:      filename,
+				Size:      filesize,
+				CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+				UpdatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			}
+			saveFileInfoResult := <-u.repository.SaveFileInfo(fileInfo)
+			if saveFileInfoResult.Error != nil {
+				output <- model.Result{Error: saveFileInfoResult.Error}
+				return
 			}
 		}
 

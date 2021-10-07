@@ -31,6 +31,7 @@ func (h *Handler) Mount(g *echo.Group) {
 	g.POST("/excel", h.uploadExcel)
 	g.POST("/zip", h.uploadZIP)
 	g.POST("/csv-to-database", h.uploadCSVToDatabase)
+	g.POST("/multiple", h.uploadMultipleFile)
 }
 
 func (h *Handler) uploadCSV(c echo.Context) error {
@@ -223,5 +224,78 @@ func (h *Handler) uploadZIP(c echo.Context) error {
 
 	response.StatusCode = http.StatusOK
 	response.Message = "File zip successfully uploaded"
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *Handler) uploadMultipleFile(c echo.Context) error {
+	var uploadFiles []model.UploadFile
+	var response model.Response
+
+	/* Get file1 form */
+	if file, err := c.FormFile("file1"); err != nil {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "Invalid form file1 parameter: " + err.Error()
+		return c.JSON(http.StatusOK, response)
+	} else {
+		filenameArr := strings.Split(file.Filename, ".")
+		if len(filenameArr) < 2 {
+			response.StatusCode = http.StatusBadRequest
+			response.Message = "File1 format is not valid"
+			return c.JSON(http.StatusOK, response)
+		}
+		uploadFile := model.UploadFile{
+			File:    file,
+			FileExt: filenameArr[1],
+		}
+		uploadFiles = append(uploadFiles, uploadFile)
+	}
+
+	/* Get file2 form */
+	if file, err := c.FormFile("file2"); err != nil {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "Invalid form file2 parameter: " + err.Error()
+		return c.JSON(http.StatusOK, response)
+	} else {
+		filenameArr := strings.Split(file.Filename, ".")
+		if len(filenameArr) < 2 {
+			response.StatusCode = http.StatusBadRequest
+			response.Message = "File2 format is not valid"
+			return c.JSON(http.StatusOK, response)
+		}
+		uploadFile := model.UploadFile{
+			File:    file,
+			FileExt: filenameArr[1],
+		}
+		uploadFiles = append(uploadFiles, uploadFile)
+	}
+
+	/* Get file3 form */
+	if file, err := c.FormFile("file3"); err != nil {
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "Invalid form file2 parameter: " + err.Error()
+		return c.JSON(http.StatusOK, response)
+	} else {
+		filenameArr := strings.Split(file.Filename, ".")
+		if len(filenameArr) < 2 {
+			response.StatusCode = http.StatusBadRequest
+			response.Message = "File3 format is not valid"
+		}
+		uploadFile := model.UploadFile{
+			File:    file,
+			FileExt: filenameArr[1],
+		}
+		uploadFiles = append(uploadFiles, uploadFile)
+	}
+
+	/* Upload process */
+	uploadResult := <-h.usecase.UploadMultipleFile(uploadFiles)
+	if uploadResult.Error != nil {
+		response.StatusCode = http.StatusBadGateway
+		response.Message = uploadResult.Error.Error()
+		return c.JSON(http.StatusOK, response)
+	}
+
+	response.StatusCode = http.StatusOK
+	response.Message = "Files successfully uploaded"
 	return c.JSON(http.StatusOK, response)
 }

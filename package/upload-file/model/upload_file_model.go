@@ -1,5 +1,12 @@
 package model
 
+import "mime/multipart"
+
+type UploadFile struct {
+	File    *multipart.FileHeader
+	FileExt string
+}
+
 type Result struct {
 	Data  interface{}
 	Error error
