@@ -27,7 +27,7 @@ func (h *Handler) downloadFile(c echo.Context) error {
 
 	/* Get file info */
 	filename := c.Param("filename")
-	fileInfo := <-h.usecase.GetFileInfo(filename)
+	fileInfo := <-h.usecase.DownloadFile(filename)
 	if fileInfo.Error != nil {
 		response.StatusCode = http.StatusBadRequest
 		response.Message = fileInfo.Error.Error()
